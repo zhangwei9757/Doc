@@ -1,0 +1,82 @@
+ALT + 1 显隐工程栏
+Alt + F7 Find Usages
+Ctrl + B 在定义和申明之间跳转
+Ctrl + Shift + Backspace 回到最后编辑的地方
+Ctrl + O 选取需要重写的方法
+Ctrl + Q 快速查看文档
+Ctrl + P 提示参数信息
+Ctrl + E 查看最近浏览的文件
+Ctrl + Alt + B 查看接口、抽象类的实现类
+Ctrl + Shift + N 找文件
+Ctrl + F7 找到某个类、变量、函数等在文中被使用到的的地方
+Ctrl + Alt + 7 查看类、对象、变量使用的地方
+Ctrl + Alt + -/+ 展开折叠当前函数、类
+Ctrl + Shift + -/+ 展开折叠所有函数、类
+Ctrl + Shift + 空格 提示信息（new后直接键入构造器、构造器内提供构造信息）
+
+jdbc:oracle:thin:@IP:Port:xxxxxx
+
+git config http.proxy "http://10.28.124.2:31151"
+git config https.proxy "https://10.28.124.2:31151"
+
+git config --unset http.proxy
+git config --unset https.proxy
+
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+
+git config --global http.proxy http://10.28.124.2:31151
+git config --global https.proxy https://10.28.124.2:31151
+
+netstat -aon|findstr "8080"
+taskkill /pid 4136-t -f
+
+//获取指定名称参数的值
+function GetUrlParam(paraName) {
+    var url = document.location.toString();
+    var arrObj = url.split("?");
+
+    if (arrObj.length > 1) {
+        var arrPara = arrObj[1].split("&");
+        var arr;
+
+        for (var i = 0; i < arrPara.length; i++) {
+            arr = arrPara[i].split("=");
+            if (arr != null && arr[0] == paraName) {
+                return arr[1];
+            }
+        }
+        return "";
+    } else {
+        return "";
+    }
+}
+
+-Dfile.encoding=UTF-8
+
+查看分支：				git branch
+创建分支：				git branch <name>
+切换分支：				git checkout <name>
+创建+切换分支：			git checkout -b <name>
+合并某分支到当前分支：	git merge <name>
+删除分支：				git branch -d <name>
+查看日志合并：			git log --graph --pretty=oneline --abbrev-commit
+
+
+使用python和js做的基于Web的SSH工具 webssh，可以从下面地址了解详情。
+https://github.com/huashengdun/webssh
+https://pypi.org/project/webssh/
+
+pip install webssh
+
+# 直接运行wssh，使用默认8888端口
+wssh
+
+# 通过绑定IP地址和端口启动
+wssh --address='192.168.0.123' --port=8888
+wssh --address='0.0.0.0' --port=8888
+
+# 通过绑定IP地址和端口启动，只允许本地地址访问
+wssh --address='127.0.0.1' --port=8888
+
+mvn install:install-file -Dfile=gavin-2.0.1.jar -DgroupId=com.gavin -DartifactId=gavin -Dversion=2.0.1 -Dpackaging=jar
