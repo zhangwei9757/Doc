@@ -1,0 +1,126 @@
+/**
+ * @author zhangwei
+ * @date 2019-12-08
+ * <p>
+ */
+@Component
+@Slf4j
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private AuthenticationFailureHandler failureHandler = new MicroAuthenticationFailHandler();
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    @Autowired
+    private MicroRedisTokenServiceImpl tokenService;
+
+    @Value("${jwt.auth.skipUrls}")
+    private String[] skipAuthUrls;
+
+    /**
+     * 1.从每个请求header获取token
+     * 2.调用前面写的validateToken方法对token进行合法性验证
+     * 3.解析得到username，并从database取出用户相关信息权限
+     * 4.把用户信息以UserDetail形式放进SecurityContext以备整个请求过程使用。
+     *
+     * @param request
+     * @param response
+     * @param filterChain
+     * @throws ServletException
+     * @throws IOException
+     */
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        String url = request.getServletPath();
+        log.info("--->>> 远程请求微服API: {}", url);
+        if (Arrays.asList(skipAuthUrls).contains(url)) {
+            log.info("--->>> 远程请求微服API: {}, 非鉴权路径...", url);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        String authHeader = request.getHeader("Authorization");
+        final String BEARER = "Bearer ";
+
+        String ipAddress = AccessAddressUtil.getIpAddress(request);
+        log.info("--->>> 远程访问主机IP: {}", ipAddress);
+
+        // Log in when the token exists
+        if (authHeader != null && authHeader.startsWith(BEARER)) {
+            String gateway = request.getHeader(Defs.网关认证密钥);
+            boolean matches = MD5Util.gateWayAuthorizationMatches(jwtTokenProvider.getSecret(), gateway);
+            if (!matches) {
+//                throw new MicroGatewayBadException(HttpStatusMicro.GATEWAY_NOT_ALLOW.getMessage());
+                failureHandler.onAuthenticationFailure(request, response, new MicroAuthenticationException(HttpStatusMicro.GATEWAY_NOT_ALLOW.getMessage()));
+                return;//返回，不再向下执行.
+            }
+
+            String authToken = authHeader.substring("Bearer ".length());
+            log.info("--->>> 用户请求headers Authorization: Bearer {}", authToken);
+            Claims claims = jwtTokenProvider.validateToken(authToken);
+
+            if (null == claims) {
+//                throw new MicroJwtExpiredException("token已过期，无效");
+                failureHandler.onAuthenticationFailure(request, response, new MicroAuthenticationException("token已过期，无效"));
+                return;//返回，不再向下执行.
+            }
+            String username = claims.getSubject();
+
+            // Determine whether the token expires
+            boolean hasKey = false;
+            try {
+                hasKey = tokenService.hasKey(username);
+            } catch (Exception e) {
+                log.info("--->>> {}, reason:{}", HttpStatusMicro.REDIS_RUNTIME_ERROR.getMessage(), e.getLocalizedMessage());
+                failureHandler.onAuthenticationFailure(request, response, new MicroAuthenticationException(e.getLocalizedMessage()));
+                return;//返回，不再向下执行.
+            }
+            if (hasKey) {
+                String redisToken = null;
+                try {
+                    redisToken = tokenService.get(username);
+                } catch (Exception e) {
+                    log.info("--->>> {}, reason:{}", HttpStatusMicro.REDIS_RUNTIME_ERROR.getMessage(), e.getLocalizedMessage());
+                    failureHandler.onAuthenticationFailure(request, response, new MicroAuthenticationException(e.getLocalizedMessage()));
+                    return;//返回，不再向下执行.
+                }
+                if (!Objects.equals(authToken, redisToken)) {
+//                    throw new MicroJwtExpiredException("token不合法，无效");
+                    failureHandler.onAuthenticationFailure(request, response, new MicroAuthenticationException("token不合法，无效"));
+                    return;//返回，不再向下执行.
+                }
+
+                Boolean expired = jwtTokenProvider.isTokenExpired(claims.getExpiration());
+                if (expired) {
+//                    throw new MicroJwtExpiredException("token已过期，无效");
+                    failureHandler.onAuthenticationFailure(request, response, new MicroAuthenticationException("token已过期，无效"));
+                    return;//返回，不再向下执行.
+                }
+            } else {
+//                throw new MicroJwtExpiredException("token不存在,无效");
+                failureHandler.onAuthenticationFailure(request, response, new MicroAuthenticationException("token不存在,无效"));
+                return;//返回，不再向下执行.
+            }
+
+            // Token is valid, add login information
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
+                if (null != userDetails) {
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.info("--->>> 用户 {} 保持在线状态成功, 信息", username, authentication.getPrincipal());
+                }
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
