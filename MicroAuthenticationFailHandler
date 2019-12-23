@@ -1,0 +1,18 @@
+/**
+ * @author zhangwei
+ * @date 2019-12-08
+ * <p>
+ * 捕捉自定义，security 异常
+ */
+@Slf4j
+public class MicroAuthenticationFailHandler extends SimpleUrlAuthenticationFailureHandler {
+
+    @Override
+    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException e) throws IOException, ServletException {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json");
+        JsonResult fail = JsonResult.fail(HttpStatus.UNAUTHORIZED.value(), e.getLocalizedMessage());
+        response.getWriter().println(JsonUtils.toJosn(fail));
+    }
+}
