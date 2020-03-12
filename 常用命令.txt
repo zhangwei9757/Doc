@@ -112,3 +112,36 @@ public static LocalDateTime parseStringToDateTime(String time, String format) {
     DateTimeFormatter df = DateTimeFormatter.ofPattern(format);
     return LocalDateTime.parse(time, df);
 }
+
+
+-------------------------------------------------------------------------------
+timed-out and no fallback available：
+
+这个错误基本是出现在Hystrix熔断器，熔断器的作用是判断该服务能不能通，如果通了就不管了，调用在指定时间内超时时，就会通过熔断器进行错误返回。
+
+一般设置如下配置的其中一个即可：
+
+1、把时间设长
+
+这里设置5秒
+
+hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=5000  
+2、把超时发生异常属性关闭
+
+hystrix.command.default.execution.timeout.enabled=false  
+3、禁用feign的hystrix 
+
+feign.hystrix.enabled: false  
+failed and no fallback available：
+
+而通过上面设置只是针对熔断器的错误关闭，并不能解决根本问题，比如Feign客户端调用远程服务时，默认为8秒超时时间，如果在规定时间内没有返回，同样会跳转到熔断器进行处理。即使关闭了熔断器的错误，但是总的错误处理还会是有这个问题出现。
+
+那么要解决根本问题，就要从请求超时时间入手，因为有些服务可能存在调用时间长的问题，所以直接配置：
+
+ribbon.ReadTimeout=60000
+ribbon.ConnectTimeout=60000
+这些才是真正解决请求超时的问题，如果不设置这个，被调用接口很慢时，会出现Read Timeout on Request。
+
+而针对调用失败重试的次数也可以设置：
+
+ribbon.maxAutoRetries=0
