@@ -83,3 +83,32 @@ wssh --address='0.0.0.0' --port=8888
 wssh --address='127.0.0.1' --port=8888
 
 mvn install:install-file -Dfile=gavin-2.0.1.jar -DgroupId=com.gavin -DartifactId=gavin -Dversion=2.0.1 -Dpackaging=jar
+
+
+注意：LocalDateTime是带时分秒的
+1.将LocalDateTime转为自定义的时间格式的字符串
+
+public static String getDateTimeAsString(LocalDateTime localDateTime, String format) {
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+    return localDateTime.format(formatter);
+}
+2.将long类型的timestamp转为LocalDateTime
+
+public static LocalDateTime getDateTimeOfTimestamp(long timestamp) {
+    Instant instant = Instant.ofEpochMilli(timestamp);
+    ZoneId zone = ZoneId.systemDefault();
+    return LocalDateTime.ofInstant(instant, zone);
+}
+3.将LocalDateTime转为long类型的timestamp
+
+public static long getTimestampOfDateTime(LocalDateTime localDateTime) {
+    ZoneId zone = ZoneId.systemDefault();
+    Instant instant = localDateTime.atZone(zone).toInstant();
+    return instant.toEpochMilli();
+}
+4.将某时间字符串转为自定义时间格式的LocalDateTime
+
+public static LocalDateTime parseStringToDateTime(String time, String format) {
+    DateTimeFormatter df = DateTimeFormatter.ofPattern(format);
+    return LocalDateTime.parse(time, df);
+}
