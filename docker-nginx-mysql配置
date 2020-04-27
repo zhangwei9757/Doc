@@ -165,17 +165,17 @@ lower_case_table_names=1
 
 3.【docker启动 mysql,gogs容器映射宿主机端口】
 >>>正确
-	docker run --name mysql3307 -e MYSQL_ROOT_PASSWORD=yellow_2019 -v /docker/mysql3307/conf:/etc/mysql/conf.d -v /docker/mysql3307/logs:/logs -v /docker/mysql3307/data:/var/lib/mysql -p 3307:3306 -d mysql:5.7.20
-	docker run --name mysql3308 -e MYSQL_ROOT_PASSWORD=yellow_2019 -v /docker/mysql3308/conf:/etc/mysql/conf.d -v /docker/mysql3308/logs:/logs -v /docker/mysql3308/data:/var/lib/mysql -p 3308:3306 -d mysql:5.7.20
-	docker run --name mysql3309 -e MYSQL_ROOT_PASSWORD=yellow_2019 -v /docker/mysql3309/conf:/etc/mysql/conf.d -v /docker/mysql3309/logs:/logs -v /docker/mysql3309/data:/var/lib/mysql -p 3309:3306 -d mysql:5.7.20
+	docker run --name mysql3307 -e MYSQL_ROOT_PASSWORD=123456 -v /docker/mysql3307/conf:/etc/mysql/conf.d -v /docker/mysql3307/logs:/logs -v /docker/mysql3307/data:/var/lib/mysql -p 3307:3306 -d mysql:5.7.20
+	docker run --name mysql3308 -e MYSQL_ROOT_PASSWORD=123456 -v /docker/mysql3308/conf:/etc/mysql/conf.d -v /docker/mysql3308/logs:/logs -v /docker/mysql3308/data:/var/lib/mysql -p 3308:3306 -d mysql:5.7.20
+	docker run --name mysql3309 -e MYSQL_ROOT_PASSWORD=123456 -v /docker/mysql3309/conf:/etc/mysql/conf.d -v /docker/mysql3309/logs:/logs -v /docker/mysql3309/data:/var/lib/mysql -p 3309:3306 -d mysql:5.7.20
 >>>
-	docker run -p 3306:3306 --name mysql3306 --restart always --privileged=true -v /docker/mysql3306/conf:/etc/mysql/conf.d -v /docker/mysql3306/logs:/logs -v /docker/mysql3306/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=yellow_2019 -d mysql:5.7.20
-	docker run -p 3307:3306 --name mysql3307 --restart always --privileged=true -v /docker/mysql3307/conf:/etc/mysql/conf.d -v /docker/mysql3307/logs:/logs -v /docker/mysql3307/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=yellow_2019 -d mysql:5.7.20
-	docker run -p 3308:3306 --name mysql3308 --restart always --privileged=true -v /docker/mysql3308/conf:/etc/mysql/conf.d -v /docker/mysql3308/logs:/logs -v /docker/mysql3308/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=yellow_2019 -d mysql:5.7.20
-	docker run -p 3309:3306 --name mysql3309 --restart always --privileged=true -v /docker/mysql3309/conf:/etc/mysql/conf.d -v /docker/mysql3309/logs:/logs -v /docker/mysql3309/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=yellow_2019 -d mysql:5.7.20
+	docker run -p 3306:3306 --name mysql3306 --restart always --privileged=true -v /docker/mysql3306/conf:/etc/mysql/conf.d -v /docker/mysql3306/logs:/logs -v /docker/mysql3306/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7.20
+	docker run -p 3307:3306 --name mysql3307 --restart always --privileged=true -v /docker/mysql3307/conf:/etc/mysql/conf.d -v /docker/mysql3307/logs:/logs -v /docker/mysql3307/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7.20
+	docker run -p 3308:3306 --name mysql3308 --restart always --privileged=true -v /docker/mysql3308/conf:/etc/mysql/conf.d -v /docker/mysql3308/logs:/logs -v /docker/mysql3308/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7.20
+	docker run -p 3309:3306 --name mysql3309 --restart always --privileged=true -v /docker/mysql3309/conf:/etc/mysql/conf.d -v /docker/mysql3309/logs:/logs -v /docker/mysql3309/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7.20
 	
-	docker run -p 3309:3306 --name mysql3309 --restart always --privileged=true -v /zzyyuse/mysql3309/conf:/etc/mysql/conf.d -v /zzyyuse/mysql3309/logs:/logs -v /zzyyuse/mysql3309/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=yellow_2019 -d mysql:5.7.20
-	docker run -p 3306:3306 --name mysql     --restart always --privileged=true -v /tpdata/mysql/conf:/etc/mysql/conf.d     -v /tpdata/mysql/logs:/logs     -v /tpdata/mysql/data:/var/lib/mysql     -e MYSQL_ROOT_PASSWORD=yellow_2019 -d mysql:5.7.20
+	docker run -p 3309:3306 --name mysql3309 --restart always --privileged=true -v /zzyyuse/mysql3309/conf:/etc/mysql/conf.d -v /zzyyuse/mysql3309/logs:/logs -v /zzyyuse/mysql3309/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7.20
+	docker run -p 3306:3306 --name mysql     --restart always --privileged=true -v /tpdata/mysql/conf:/etc/mysql/conf.d     -v /tpdata/mysql/logs:/logs     -v /tpdata/mysql/data:/var/lib/mysql     -e MYSQL_ROOT_PASSWORD=123456 -d mysql:5.7.20
 	docker run -p 3306:3306 --name mysql     --restart always --privileged=true -v /tpsys/mysql/conf:/etc/mysql/conf.d     -v /tpsys/mysql/logs:/logs     -v /tpsys/mysql/data:/var/lib/mysql     -e MYSQL_ROOT_PASSWORD=zhousir_0301 -d mysql:5.7.20
 	docker run -d -p 8089:3000 --name=server-redmine -e MYSQL_ROOT_PASSWORD="zhousir_0301" --link mysql:mysql -v /tpsys/redmine/redmine:/usr/src/redmine/files redmine
 	docker run -d -p 3000:3000 --name=server-redmine -e MYSQL_ROOT_PASSWORD="123456" --link mysql3306:mysql -v /docker/redmine/redmine:/usr/src/redmine/files redmine
