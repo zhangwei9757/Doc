@@ -21,3 +21,57 @@ INSERT INTO t_user(id,NAME,UUID,lastime) VALUES(1,'Moxiao',UUID(),NOW());
 mysql> CREATE USER 'zw'@'%' IDENTIFIED BY '123456';#创建用户
 mysql> GRANT REPLICATION SLAVE ON *.* TO 'zw'@'%'; #分配权限
 mysql>FLUSH PRIVILEGES;   						   #刷新权限
+
+--------------------------------------------------------------------------------------------------------------------------
+-- 查看事务详情
+SELECT * FROM information_schema.`INNODB_TRX`
+
+-- mysql查看被锁住的表 
+-- 查询是否锁表
+SHOW OPEN TABLES WHERE In_use > 0;
+-- 查看所有进程
+SHOW PROCESSLIST;
+SHOW FULL PROCESSLIST;
+
+-- 查看正在锁的事务
+SELECT * FROM INFORMATION_SCHEMA.INNODB_LOCKS; 
+-- 查看等待锁的事务
+SELECT * FROM INFORMATION_SCHEMA.INNODB_LOCK_WAITS; 
+-- 查看innodb引擎的运行时信息
+SHOW ENGINE INNODB STATUS\G;
+-- 查看造成死锁的sql语句，分析索引情况，然后优化sql语句；
+ 
+-- 查看服务器状态
+SHOW STATUS LIKE '%lock%';
+-- 查看超时时间：
+SHOW VARIABLES LIKE '%timeout%';
+-- 查看正在锁的事务对应的详情线程连接信息
+SELECT 
+  p.ID AS conn_id,
+  P.USER AS login_user,
+  P.HOST AS login_host,
+  p.DB AS database_name,
+  P.TIME AS trx_sleep_seconds,
+  TIME_TO_SEC(TIMEDIFF(NOW(), T.trx_started)) AS trx_open_seconds,
+  T.trx_started,
+  T.trx_isolation_level,
+  T.trx_tables_locked,
+  T.trx_rows_locked,
+  t.trx_state,
+  p.COMMAND AS process_state,
+  (SELECT 
+    GROUP_CONCAT(T1.`SQL_TEXT` SEPARATOR ';
+') 
+  FROM
+    performance_schema.events_statements_history AS T1 
+    INNER JOIN performance_schema.threads AS T2 
+      ON T1.`THREAD_ID` = T2.`THREAD_ID` 
+  WHERE T2.`PROCESSLIST_ID` = P.id) AS trx_sql_text 
+FROM
+  `information_schema`.`INNODB_TRX` t 
+  INNER JOIN `information_schema`.`PROCESSLIST` p 
+    ON t.trx_mysql_thread_id = p.id 
+WHERE t.trx_state = 'RUNNING' 
+  AND p.COMMAND = 'Sleep' 
+  AND P.TIME > 3 
+ORDER BY T.trx_started ASC 
