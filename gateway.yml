@@ -1,0 +1,88 @@
+server:
+  port: 8011
+
+spring:
+  application:
+    name: xxx-server
+  redis:
+    host: x.x.x.x
+    port: 6379
+    password: x
+    timeout: 5000ms
+  sleuth:
+    web:
+      client:
+        enabled: true
+    sampler:
+      probability: ${ZIPKIN_RATE:0.1}
+  rabbitmq:
+    host: x.x.x.x
+    port: 5672
+    username: x
+    password: x
+  zipkin:
+    base-url: http://x.x.x.x:9411/
+    sender:
+      type: web
+  bus:
+    enabled: true
+    trace:
+      enabled: true # 开启消息总线 & bus-refresh 端口
+  boot:
+    admin:
+      client:
+        url: http://x.x.xx.x:8012
+        name: x
+        password: x
+        instance:
+          service-url: http://${spring.cloud.client.ip-address}:${server.port}
+          prefer-ip: true
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: x
+          uri: lb://x-server
+          predicates:
+            - Path=/x/**
+          filters:
+            - StripPrefix=1
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@remoteAddrKeyResolver}"
+                redis-rate-limiter.replenishRate: 500
+                redis-rate-limiter.burstCapacity: 3000
+            - name: Retry
+              args:
+                retries: 3
+                series: SERVER_ERROR
+       
+management:
+  health:
+    db:
+      enabled: false
+    mail:
+      enabled: false
+    redis:
+      enabled: false
+    rabbit:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "*" #暴露所有节点 "bus-refresh"
+    health:
+      senysssitive: false #关闭过滤敏感信息
+  endpoint:
+    health:
+      show-details: ALWAYS #显示详细信息
+
+#logging:
+#  level:
+#    org.springframework.cloud.gateway: debug
+#    org.springframework.http.server.reactive: debug
+#    org.springframework.web.reactive: debug
+#    reactor.ipc.netty: debug
