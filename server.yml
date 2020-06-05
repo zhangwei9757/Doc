@@ -1,0 +1,234 @@
+server:
+  port: 8081
+  # 设置请求头最大长度
+  max-http-header-size: 4048576
+  tomcat:
+    max-http-header-size: -1
+    max-http-post-size: -1
+
+spring:
+  cloud:
+    bus:
+      id: ${vcap.application.name:${spring.application.name:application}}:${vcap.application.instance_index:${spring.profiles.active:${local.server.port:${server.port:0}}}}:${vcap.application.instance_id:${random.value}}
+  application:
+    name: xx-server
+  datasource:
+#    type: com.alibaba.druid.pool.DruidDataSource
+#    driverClassName: com.mysql.jdbc.Driver
+#    filters: stat,wall
+#    druid:
+#      url: jdbc:mysql://x.x.x.x:3306/xx?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false
+#      username: xx
+#      password: xx
+#      initialSize: 5
+#      minIdle: 5
+#      maxActive: 20
+#      maxWait: 60000
+#      timeBetweenEvictionRunsMillis: 60000
+#      minEvictableIdleTimeMillis: 300000
+#      validationQuery: SELECT 1 FROM DUAL
+#      testWhileIdle: true
+#      testOnBorrow: false
+#      testOnReturn: false
+#      poolPreparedStatements: false
+#      maxPoolPreparedStatementPerConnectionSize: 20
+#      connectionProperties: 'druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000'
+    druid:
+      stat-view-servlet:
+        loginUsername: xx
+        loginPassword: xx
+    dynamic:
+      primary: master
+      strict: true
+      datasource:
+        master:
+          username: x
+          password: x
+          driver-class-name: com.mysql.jdbc.Driver
+          url: jdbc:mysql://x.x.x.x:3306/x?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&zeroDateTimeBehavior=convertToNull&useSSL=false
+          druid: #以下均为默认值
+            initial-size: 3
+            max-active: 8
+            min-idle: 2
+            max-wait: -1
+            min-evictable-idle-time-millis: 30000
+            max-evictable-idle-time-millis: 30000
+            time-between-eviction-runs-millis: 0
+            validation-query: select 1
+            validation-query-timeout: -1
+            test-on-borrow: false
+            test-on-return: false
+            test-while-idle: true
+            pool-prepared-statements: true
+            max-open-prepared-statements: 100
+            filters: stat,wall
+            share-prepared-statements: true
+        slave_1:
+          username: x
+          password: x
+          driver-class-name: com.mysql.jdbc.Driver
+          url: jdbc:mysql://x.x.x.x:3306/x?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&zeroDateTimeBehavior=convertToNull&useSSL=false
+          druid: #以下均为默认值
+            initial-size: 3
+            max-active: 8
+            min-idle: 2
+            max-wait: -1
+            min-evictable-idle-time-millis: 30000
+            max-evictable-idle-time-millis: 30000
+            time-between-eviction-runs-millis: 0
+            validation-query: select 1
+            validation-query-timeout: -1
+            test-on-borrow: false
+            test-on-return: false
+            test-while-idle: true
+            pool-prepared-statements: true
+            max-open-prepared-statements: 100
+            filters: stat,wall
+            share-prepared-statements: true
+  sleuth:
+    #baggage-keys:   # 注意, Sleuth2.0.0之后, baggage的 key 必须在这里配置才能生效
+    #  - SessionId
+    web:
+      client:
+        enabled: true
+    sampler:
+      probability: ${ZIPKIN_RATE:0.1}
+  rabbitmq:
+    host: x.x.x.x
+    port: 5672
+    username: x
+    password: x
+    virtual-host: /
+    connection-timeout: 10000
+    publisher-confirms: true
+    publisher-returns: true
+    listener:
+      simple: # 开启ACK SimpleMessageListenerContainer
+        acknowledge-mode: manual
+#        auto-startup: true
+#        default-requeue-rejected: false # 不重回队列
+#        concurrency: 5
+#        max-concurrency: 20
+#        prefetch: 1 # 每次只处理一个 信息
+#        retry:
+#          enabled: true
+      direct: # 开启ACK DirectMessageListenerContainer
+        acknowledge-mode: manual  # 配置 manual  表示启动消费方的手动确认
+    template:
+      mandatory: true
+#      retry:
+#        enabled: true
+  zipkin:
+    base-url: http://x.x.x.x:9411/
+    sender:
+      type: web
+  bus:
+    trace:
+      enabled: true # 开启消息总线 & bus-refresh 端口
+    enabled: true
+  boot:
+    admin:
+      client:
+        url: http://x.x.x.x:8012
+        name: x
+        password: x
+        instance:
+          #service-base-url: http://${spring.cloud.client.ip-address}:${server.port}
+          service-url: http://${spring.cloud.client.ip-address}:${server.port}
+          prefer-ip: true
+  redis:
+    host: x.x.x.x
+    port: 6379
+    password: x
+    timeout: 5000ms
+    jedis:
+      pool:
+        max-active: 8 #最大连接数据库连接数,设 0 为没有限制
+        max-idle: 8  #最大等待连接中的数量,设 0 为没有限制
+        max-wait: -1ms  #最大建立连接等待时间。如果超过此时间将接到异常。设为-1表示无限制。
+        min-idle: 0 #最小等待连接中的数量,设 0 为没有限制
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        max-wait: -1ms
+        min-idle: 0
+      shutdown-timeout: 1000ms
+feign:
+  hystrix:
+    enabled: true
+  #  httpclient:
+  #    enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 60000
+        readTimeout: 60000
+ribbon:
+  ConnectTimeout: 60000
+  ReadTimeout: 60000
+  MaxAutoRetries: 0
+  MaxAutoRetriesNextServer: 0
+hystrix:
+  command:
+    default:
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          strategy: SEMAPHORE
+          thread:
+            timeoutInMilliseconds: 60000
+      fallback:
+        isolation:
+          semaphore:
+            maxConcurrentRequests: 50
+  circuitBreaker:
+    sleepWindowInMilliseconds:  5000
+    requestVolumeThreshold: 1000
+#    errorThresholdPercentage: 95
+management:
+  health:
+    db:
+      enabled: false
+    mail:
+      enabled: false
+    redis:
+      enabled: false
+    rabbit:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "*" #暴露所有节点 "bus-refresh"
+      health:
+        senysssitive: false #关闭过滤敏感信息
+  endpoint:
+    health:
+      show-details: ALWAYS  #显示详细信息
+
+mybatis-plus:
+  #  configuration:
+  #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath:/mapper/*Mapper.xml
+  type-aliases-package: x.x.entity
+  check-config-location: true
+#  global-config:
+#    db-config:
+#      id-type: auto
+#      field-strategy: ignored
+
+#logging:
+#  level:
+#    root: info
+
+xxl-job:
+  admin:
+    admin-addresses: http://x.x.x.x:8015/xxl-job-admin/
+  executor:
+    app-name: x-server #默认为 xxl-job-executor
+    access-token: #默认为空
+    log-path: logs/applogs/xxl-job/jobhandler #默认为 logs/applogs/xxl-job/jobhandler
+    log-retention-days: 10 #默认为 10
+    ip: #默认为空
+    port: 9999 #默认为 9999
