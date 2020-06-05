@@ -1,0 +1,89 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: xx-server
+  sleuth:
+    #baggage-keys:   # 注意, Sleuth2.0.0之后, baggage的 key 必须在这里配置才能生效
+    #  - SessionId
+    web:
+      client:
+        enabled: true
+    sampler:
+      probability: ${ZIPKIN_RATE:0.1}
+  zipkin:
+    base-url: http://x.x.x.x:9411/
+    sender:
+      type: web
+  bus:
+    trace:
+      enabled: true # 开启消息总线 & bus-refresh 端口
+    enabled: true
+  security:
+    user:
+      name: xx
+      password: xx
+  boot:
+    admin:
+      notify:
+        mail:
+          # 逗号分隔的邮件收件人列表
+          to: x@x.x.com
+          # 开启邮箱通知
+          enabled: true
+          # 不需要发送通知的状态：从状态A:到状态B
+          ignore-changes: #{"UNKNOWN:UP"}
+          # 逗号分隔的抄送收件人列表
+          cc:
+          # 发件人
+          from: ${spring.mail.username}    
+      ui:
+        title: 微服务监控
+      monitor:
+        period: 10000 # 更新时间间隔 默认值 10000
+        status-lifetime: 100000 # 更新的生命周期 默认值 100000
+        read-timeout: 2000 #读取超时 默认值 2000
+        connect-timeout: 2000 #连接超时 默认值 2000
+      discovery:
+        ignored-services: consul,xx-server
+        #    turbine:
+        #      clusters: default
+        #      url: http://localhost:8989/turbine.stream
+  mail:
+    host: x.xx.x.com
+    username: x.x@x.x.com
+    password: x
+    port: 25
+    protocol: smtp
+#    properties:
+#      mail:
+#        debug: false
+#        smtp:
+#          auth: true   #安全认证(默认是true)
+#          port: 465
+#          starttls:
+#            enable: true
+#            required: true
+#          ssl:
+#            enable: true  #开启ssl加密 否则项目启动时报530error
+#            socketFactory: sf
+management:
+  health:
+    db:
+      enabled: false
+    mail:
+      enabled: false
+    redis:
+      enabled: false
+    rabbit:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "*" #暴露所有节点 "bus-refresh"
+    health:
+      senysssitive: false #关闭过滤敏感信息
+  endpoint:
+    health:
+      show-details: ALWAYS #显示详细信息
