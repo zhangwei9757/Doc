@@ -1,0 +1,1 @@
+UPDATE USER SET authentication_string = PASSWORD('newpasswd') WHERE USER = 'dbadmin' AND HOST = '%';
