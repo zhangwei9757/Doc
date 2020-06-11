@@ -22,11 +22,11 @@ validate_password = off
 
 
 ========================== 2 step ======================
-方式一： mysqld --defaults-file=/mysql/3309/my.cnf --initialize-insecure --user=mysql
+方式一： mysqld --defaults-file=/zhangwei/3307/my.cnf --initialize-insecure --user=root
 方式二： 直接复制
 
 ========================== 3 step ======================
-mysqld --defaults-file=/mqs/data/my.cnf --user=mysql &
+mysqld --defaults-file=/zhangwei/3307/my.cnf --user=root &
 
 ========================== 4 step ======================
-mysqladmin -u root -p -S /data/3306/mysql.sock shutdown
+mysqladmin -u root -p -S /zhangwei/3307/mysql.sock shutdown
