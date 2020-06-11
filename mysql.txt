@@ -17,16 +17,14 @@ socket=/zhangwei/3307/mysql.sock
 datadir=/zhangwei/3307/data
 log-error=/zhangwei/3307/mysqld.log
 pid-file=/zhangwei/3307/mysqld.pid
-validate_password_policy=0
-validate_password = off
 
 
 ========================== 2 step ======================
-方式一： mysqld --defaults-file=/zhangwei/3307/my.cnf --initialize-insecure --user=root
+方式一： mysqld --defaults-file=/zhangwei/3307/my.cnf --initialize-insecure --user=mysql
 方式二： 直接复制
 
 ========================== 3 step ======================
-mysqld --defaults-file=/zhangwei/3307/my.cnf --user=root &
+mysqld --defaults-file=/zhangwei/3307/my.cnf --user=mysql &
 
 ========================== 4 step ======================
 mysqladmin -u root -p -S /zhangwei/3307/mysql.sock shutdown
