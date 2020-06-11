@@ -1,1 +1,32 @@
 UPDATE USER SET authentication_string = PASSWORD('newpasswd') WHERE USER = 'dbadmin' AND HOST = '%';
+
+# CentOS7配置MySQL5.7多实例
+https://www.cnblogs.com/caijinxu/articles/7101191.html
+
+========================== 1 step ======================
+my.cnf
+
+[client]
+port=3307
+
+[mysqld]
+user=root
+port=3307
+symbolic-links=0
+socket=/zhangwei/3307/mysql.sock
+datadir=/zhangwei/3307/data
+log-error=/zhangwei/3307/mysqld.log
+pid-file=/zhangwei/3307/mysqld.pid
+validate_password_policy=0
+validate_password = off
+
+
+========================== 2 step ======================
+方式一： mysqld --defaults-file=/mysql/3309/my.cnf --initialize-insecure --user=mysql
+方式二： 直接复制
+
+========================== 3 step ======================
+mysqld --defaults-file=/mqs/data/my.cnf --user=mysql &
+
+========================== 4 step ======================
+mysqladmin -u root -p -S /data/3306/mysql.sock shutdown
