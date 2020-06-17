@@ -55,6 +55,15 @@ function GetUrlParam(paraName) {
     }
 }
 
+// js 判断是不是一个数组
+function isArrayFn(obj){
+    if (typeof Array.isArray === "function") {
+        return Array.isArray(obj);
+    }else{
+        return Object.prototype.toString.call(obj) === "[object Array]";
+    }
+}
+
 -Dfile.encoding=UTF-8
 
 查看分支：				git branch
