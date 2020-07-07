@@ -1,0 +1,30 @@
+<groupId>parent-groupId</groupId>
+<artifactId>parent-artifactId</artifactId>
+<version>1.0.0</version>
+<build>
+<plugins>
+  <plugin>
+    <groupId>org.codehaus.mojo</groupId>
+    <artifactId>versions-maven-plugin</artifactId>
+    <version>2.3</version>
+    <configuration>
+      <generateBackupPoms>false</generateBackupPoms>
+    </configuration>
+  </plugin>
+</plugins>
+</build>
+
+
+1.2 只更新父模块的版本号
+# 1.1-SNAPSHOT 为项目目标版本号
+mvn versions:set -DnewVersion=1.1-SNAPSHOT
+
+1.3 更新子模块和父模块一样的版本号
+mvn -N versions:update-child-modules 
+
+1.4 提交更新
+mvn versions:commit
+
+只需要执行: mvn -N versions:update-child-modules
+则会自动把子POM的<parent>标签中的version更新为和父POM一致。
+这样修改一处然后运行一下执行一下命令就可以达到统一修改版本号的目的了。（在父model上执行后，所有子model中parent中的version都会修改）
