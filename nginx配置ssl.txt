@@ -1,4 +1,15 @@
+===================================步骤===============================================
+1. 本文主要记录Nginx怎么配置SSL证书，前提是Nginx安装成功和SSL证书已经获取。
+   在我们下载的证书文件中有一个Nginx的文件夹，这里面的两个文件都是需要的。我们需要把这个两个文件上传到 linux 服务器中，
+   推荐放到/etc/ssl/目录下
+2. /usr/local/nginx/ 进入安装目录
+3. 如果没有ssl模块，配置一下
+4. yum -y install openssl openssl-devel
+   ./configure --with-http_ssl_module
+   make
+5. 参考下面nginx.conf文件配置自己的映射   
 
+====================================nginx.conf=========================================
 #user  nobody;
 worker_processes  1;
 
