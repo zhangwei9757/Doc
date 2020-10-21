@@ -1,0 +1,91 @@
+package com.microservice.utils;
+
+import com.google.common.base.Charsets;
+import com.microservice.exception.TpvdbException;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpStatus;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+
+/**
+ * @author zhangwei
+ * @date 2020-06-09
+ * <p>
+ * AES对称加解密
+ */
+public class AesUtils {
+    private static final String KEY_ALGORITHM = "AES";
+    private static final String DEFAULT_CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
+    private static final String KEY = "tPVdBSecURe_";
+
+    /**
+     * AES对称-加密操作
+     *
+     * @param content  需要进行加密的原文
+     * @param password 进行了Base64编码的秘钥
+     * @return String 数据密文，加密后的数据，进行了Base64的编码
+     */
+    public static String encrypt(String content, String password) {
+        try {
+            if (StringUtils.isBlank(password)) {
+                password = KEY;
+            }
+            Cipher cipher = Cipher.getInstance(DEFAULT_CIPHER_ALGORITHM);
+            byte[] byteContent = content.getBytes(Charsets.UTF_8);
+            cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(password));
+            byte[] result = cipher.doFinal(byteContent);
+            return Base64.encodeBase64String(result);
+        } catch (Exception e) {
+            throw new TpvdbException(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+        }
+    }
+
+    /**
+     * AES对称-解密操作
+     *
+     * @param content  需要解密的数据（数据必须是通过AES进行加密后，对加密数据Base64编码的数据）
+     * @param password 进行了Base64编码的秘钥
+     * @return String 返回解密后的原文
+     */
+    public static String decrypt(String content, String password) {
+        try {
+            if (StringUtils.isBlank(content)) {
+                return null;
+            }
+
+            if (StringUtils.isBlank(password)) {
+                password = KEY;
+            }
+            Cipher cipher = Cipher.getInstance(DEFAULT_CIPHER_ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, getSecretKey(password));
+            byte[] result = cipher.doFinal(Base64.decodeBase64(content));
+            return new String(result, Charsets.UTF_8);
+        } catch (Exception e) {
+            throw new TpvdbException(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+        }
+    }
+
+    /**
+     * 生成加密秘钥
+     *
+     * @return
+     */
+    private static SecretKeySpec getSecretKey(final String password) {
+        try {
+            KeyGenerator kg = KeyGenerator.getInstance(KEY_ALGORITHM);
+            SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
+            secureRandom.setSeed(password.getBytes());
+            kg.init(128, secureRandom);
+            SecretKey secretKey = kg.generateKey();
+            return new SecretKeySpec(secretKey.getEncoded(), KEY_ALGORITHM);
+        } catch (NoSuchAlgorithmException ex) {
+            throw new TpvdbException(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+        }
+    }
+}
