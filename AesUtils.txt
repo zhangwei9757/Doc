@@ -1,4 +1,3 @@
-package com.microservice.utils;
 
 import com.google.common.base.Charsets;
 import com.microservice.exception.TpvdbException;
@@ -22,7 +21,7 @@ import java.security.SecureRandom;
 public class AesUtils {
     private static final String KEY_ALGORITHM = "AES";
     private static final String DEFAULT_CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
-    private static final String KEY = "tPVdBSecURe_";
+    private static final String KEY = "tzwBSecURe_";
 
     /**
      * AES对称-加密操作
@@ -42,7 +41,7 @@ public class AesUtils {
             byte[] result = cipher.doFinal(byteContent);
             return Base64.encodeBase64String(result);
         } catch (Exception e) {
-            throw new TpvdbException(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+            throw new Exception(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
         }
     }
 
@@ -67,7 +66,7 @@ public class AesUtils {
             byte[] result = cipher.doFinal(Base64.decodeBase64(content));
             return new String(result, Charsets.UTF_8);
         } catch (Exception e) {
-            throw new TpvdbException(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+            throw new Exception(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
         }
     }
 
@@ -85,7 +84,7 @@ public class AesUtils {
             SecretKey secretKey = kg.generateKey();
             return new SecretKeySpec(secretKey.getEncoded(), KEY_ALGORITHM);
         } catch (NoSuchAlgorithmException ex) {
-            throw new TpvdbException(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+            throw new Exception(HttpStatus.INTERNAL_SERVER_ERROR.value(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
         }
     }
 }
