@@ -1,0 +1,372 @@
+package com.microservice.utils;
+
+import com.google.common.base.Charsets;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URLEncoder;
+import java.util.List;
+import java.util.Objects;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+
+/**
+ * <dependency>
+ * <groupId>org.apache.commons</groupId>
+ * <artifactId>commons-compress</artifactId>
+ * <version>1.20</version>
+ * </dependency>
+ */
+@Slf4j
+public class ZipUtils {
+
+    /**
+     * 多文件打包, 通过输出流下载
+     *
+     * @param zipFileName
+     * @param files
+     * @return
+     */
+    public static void zip(HttpServletResponse response, File zipFileName, File... files) throws Exception {
+        if (null == files) {
+            throw new RuntimeException("待压缩文件列表为空");
+        }
+        if (Objects.isNull(zipFileName)) {
+            throw new RuntimeException("压缩信息为空");
+        }
+        if (Objects.isNull(response)) {
+            throw new RuntimeException("下载通道不合法");
+        }
+        response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        response.setCharacterEncoding(Charsets.UTF_8.name());
+        response.setContentType("multipart/form-data");
+        response.setHeader("Content-Disposition", "attachment;fileName=" + URLEncoder.encode(zipFileName.getName(), "UTF-8"));
+        try (OutputStream outputStream = response.getOutputStream(); ZipOutputStream zos = new ZipOutputStream(outputStream);) {
+            downloadTolocal(zos, files);
+        } catch (IOException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * 压缩流自动下载文件
+     *
+     * @param zos
+     * @param files
+     * @throws Exception
+     */
+    private static void downloadTolocal(ZipOutputStream zos, File... files) throws Exception {
+        if (null == files) {
+            throw new RuntimeException("待压缩文件列表为空");
+        }
+        if (Objects.isNull(zos)) {
+            throw new RuntimeException("下载通道不合法");
+        }
+        for (File file : files) {
+            byte[] buffer = new byte[1024];
+            int len;
+            ZipEntry entry = new ZipEntry(file.getName());
+            try (InputStream is = new FileInputStream(file); BufferedInputStream in = new BufferedInputStream(is)) {
+                zos.putNextEntry(entry);
+                while ((len = in.read(buffer)) != -1) {
+                    zos.write(buffer, 0, len);
+                }
+            } catch (Exception e) {
+                throw new Exception(e);
+            } finally {
+                try {
+                    zos.closeEntry();
+                } catch (Exception e2) {
+                    throw new Exception(e2);
+                }
+            }
+        }
+    }
+
+    /**
+     * 多文件打包, 到指定压缩文件
+     *
+     * @param zipFileName
+     * @param files
+     * @return
+     */
+    public static boolean zip(File zipFileName, File... files) {
+        ZipOutputStream out = null;
+        BufferedOutputStream bo = null;
+        try {
+            createDir(zipFileName);
+            out = new ZipOutputStream(new FileOutputStream(zipFileName));
+            for (int i = 0; i < files.length; i++) {
+                if (null != files[i]) {
+                    zipList(out, files[i], files[i].getName());
+                }
+            }
+            out.close();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * 多文件打包, 到指定压缩文件
+     *
+     * @param zipFileName
+     * @param files
+     * @return
+     */
+    public static boolean zip(File zipFileName, List<File> files) {
+        ZipOutputStream out = null;
+        BufferedOutputStream bo = null;
+        try {
+            if(!zipFileName.exists()){
+                if(!zipFileName.getParentFile().exists()){
+                    zipFileName.getParentFile().mkdir();
+                }
+                zipFileName.createNewFile();
+            }
+            createDir(zipFileName);
+            out = new ZipOutputStream(new FileOutputStream(zipFileName));
+            for (int i = 0; i < files.size(); i++) {
+                File  file=files.get(i);
+                if (null != file) {
+                    zipList(out, file, file.getName());
+                }
+            }
+            out.close();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * 多文件流自动添加
+     *
+     * @param out
+     * @param file
+     * @param base
+     */
+    private static void zipList(ZipOutputStream out, File file, String base) throws Exception {
+        try {
+            if (file.isDirectory()) {//压缩目录
+                try {
+                    File[] fl = file.listFiles();
+                    if (fl.length == 0) {
+                        out.putNextEntry(new ZipEntry(base + File.separator));
+                    }
+                    for (int i = 0; i < fl.length; i++) {
+                        zipList(out, fl[i], base + File.separator + fl[i].getName());
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                out.putNextEntry(new ZipEntry(base));
+                FileInputStream in = new FileInputStream(file);
+                BufferedInputStream bi = new BufferedInputStream(in);
+                int b;
+                while ((b = bi.read()) != -1) {
+                    out.write(b);
+                }
+                out.closeEntry();
+                in.close();
+            }
+        } catch (IOException e) {
+            throw new Exception(e);
+        }
+    }
+
+    /**
+     * 目录不存在时，先创建目录
+     *
+     * @param targetFile
+     */
+    private static void createDir(File targetFile) {
+        if (Objects.isNull(targetFile)) {
+            throw new RuntimeException("目录文件信息为空");
+        }
+        String parent = targetFile.getParent();
+        File file = new File(parent);
+        if (file.isDirectory() && !file.exists()) {
+            file.mkdirs();
+        }
+    }
+
+    /**
+     * 回写 json流
+     *
+     * @param response
+     * @param errMessage
+     * @throws IOException
+     */
+    public static void returnJson(HttpServletResponse response, String errMessage) throws IOException {
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json");
+
+        JsonResult success = JsonResult.fail(errMessage);
+        response.getWriter().println(JsonUtils.toJosn(success));
+    }
+
+    public static void main(String[] args) {
+
+        String s = "E:\\testzip\\test.zip";
+        String s_ = "E:\\testzip\\test2.zip";
+
+        String s0 = "E:\\testzip\\e7fc0e66-c57a-49fb-a8a6-7547fa29e8d0.png";
+        String s1 = "E:\\testzip\\ead465da-3adc-4974-8e85-4764853b5400.png";
+        String s2 = "E:\\testzip\\eba4fe68-6b87-4fcb-99ef-a892c835beb7.png";
+
+       zip(new File(s), new File[]{new File(s0), new File(s1), new File(s2)});
+        zip(new File(s_), new File(s0),new File(s1));
+        System.out.println("ok");
+    }
+
+//    /**
+//     * 创建zip包
+//     *
+//     * @param srcSource
+//     * @param fileName  如果是单独一个文件 该变量为文件名
+//     * @return
+//     * @throws Exception
+//     */
+//    public static byte[] createZipByFile(String srcSource, String fileName) throws Exception {
+//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//        ZipOutputStream zip = new ZipOutputStream(outputStream);
+//        //将目标文件打包成zip导出
+//        File file = new File(srcSource);
+//        make(zip, file, fileName);
+//        IOUtils.closeQuietly(zip);
+//        return outputStream.toByteArray();
+//    }
+//
+//    public static void make(ZipOutputStream zip, File file, String dir) throws Exception {
+//        //如果当前的是文件夹，则进行进一步处理
+//        if (file.isDirectory()) {
+//            //得到文件列表信息
+//            File[] files = file.listFiles();
+//            //将文件夹添加到下一级打包目录
+//            //循环将文件夹中的文件打包
+//            for (int i = 0; i < files.length; i++) {
+//                //递归处理
+//                make(zip, files[i], files[i].getName());
+//            }
+//        } else {
+//            //当前的是文件，打包处理
+//            //文件输入流
+//            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
+//            ZipEntry entry = new ZipEntry(dir);
+//            zip.putNextEntry(entry);
+//            zip.write(readByBinary(file.getPath()));
+//            IOUtils.closeQuietly(bis);
+//            zip.flush();
+//            zip.closeEntry();
+//        }
+//    }
+//
+//    /**
+//     * 生成zip压缩包保存
+//     *
+//     * @param bytes
+//     * @param strZipName
+//     * @throws Exception
+//     */
+//    public static void generateZipFile(List<Map<String, Object>> bytes, String strZipName) throws Exception {
+//        ZipOutputStream out = null;
+//        //压缩文件路径
+//        File desFile = new File(strZipName);
+//        if (!desFile.exists()) {
+//            desFile.getParentFile().mkdirs();
+//            desFile.createNewFile();
+//        }
+//        ZipArchiveOutputStream zous = new ZipArchiveOutputStream(desFile);
+//        //防止中文乱码
+//        if (zous instanceof ZipArchiveOutputStream) {
+//            zous.setEncoding("GBK");
+//        }
+//        try {
+//            zous.setUseZip64(Zip64Mode.AsNeeded);
+//            for (int i = 0; i < bytes.size(); i++) {
+//                String name = (String) bytes.get(i).get("name");
+//                String suffix = (String) bytes.get(i).get("suffix");
+//
+//                // 前面几个参数只是为了命名文件，这个by才是二进制文件，是byte[]的形式
+//                byte[] by = (byte[]) bytes.get(i).get("buffer");
+//                String filename = name + "." + suffix;
+//                ArchiveEntry entry = new ZipArchiveEntry(filename);
+//                zous.putArchiveEntry(entry);
+//                zous.write(by);
+//                zous.closeArchiveEntry();
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        } finally {
+//            zous.close();
+//        }
+//    }
+//
+//    /**
+//     * 生成zip文件的的字节流形式
+//     *
+//     * @param bytes
+//     * @return
+//     * @throws Exception
+//     */
+//    public static byte[] generateZipByte(List<Map<String, Object>> bytes) throws Exception {
+//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//        ZipOutputStream out = null;
+//        try {
+//            out = new ZipOutputStream(outputStream);
+//            for (int i = 0; i < bytes.size(); i++) {
+//                String name = (String) bytes.get(i).get("name");
+//                String suffix = (String) bytes.get(i).get("suffix");
+//
+//                // 前面几个参数只是为了命名文件，这个by才是二进制文件，是byte[]的形式
+//                byte[] by = (byte[]) bytes.get(i).get("buffer");
+//                String filename = name + "." + suffix;
+//                ArchiveEntry entry = new ZipArchiveEntry(filename);
+//                out.putNextEntry(new ZipEntry(name + "." + suffix));
+//                out.write(by);
+//                out.closeEntry();
+//                out.flush();
+//            }
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        } finally {
+//            if (out != null) {
+//                out.close();
+//            }
+//        }
+//        return outputStream.toByteArray();
+//    }
+//
+//    /**
+//     * 读取文件二进制内容
+//     *
+//     * @param path
+//     * @return
+//     * @throws IOException
+//     */
+//    public static byte[] readByBinary(String path) {
+//        InputStream inputStream = null;
+//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//        try {
+//            inputStream = new FileInputStream(path);
+//            int c = 0;
+//            byte[] bytes = new byte[1024];
+//            while ((c = inputStream.read(bytes)) != -1) {
+//                baos.write(bytes, 0, c);
+//            }
+//            inputStream.close();
+//        } catch (Exception e) {
+//            throw new RuntimeException("读取文件二进制内容异常" + e.getMessage(), e);
+//        }
+//        return baos.toByteArray();
+//    }
+}
