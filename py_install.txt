@@ -1,0 +1,129 @@
+在CentOS 7环境下，安装通用执行器，需要依赖Python3。安装Python3，需要升级OpenSSL。
+
+一、升级OpenSSL
+1）确认OpenSSL默认版本
+[root@zzzz dir]# openssl version
+OpenSSL 1.0.2k-fips  26 Jan 2017
+
+2）升级版本到OpenSSL 1.1.1
+[root@zzzz dir]# tar -xzvf openssl-1.1.1.tar.gz
+[root@zzzz dir]# cd openssl-1.1.1/
+
+3）编译和安装及配置OpenSSL
+[root@zzzz openssl-1.1.1]# ./config --prefix=/usr/local/openssl
+[root@zzzz openssl-1.1.1]# make && make install
+[root@zzzz openssl-1.1.1]# make clean
+
+[root@zzzz openssl-1.1.1]# mv /usr/bin/openssl /usr/bin/openssl.old
+[root@zzzz openssl-1.1.1]# ln -s /usr/local/openssl/bin/openssl /usr/bin/openssl
+[root@zzzz openssl-1.1.1]# echo "/usr/local/openssl/lib" >> /etc/ld.so.conf
+[root@zzzz openssl-1.1.1]# ldconfig -v
+
+4）确认OpenSSL升级成功
+[root@zzzz openssl-1.1.1]# openssl version
+OpenSSL 1.1.1  11 Sep 2018
+
+二、安装Python3
+安装版本为Python 3.7.2
+1）解压
+[root@zzzz dir]# tar -xvf Python-3.7.2.tar
+[root@zzzz dir]# cd Python-3.7.2/
+
+2）安装依赖包
+[root@zzzz Python-3.7.2]# yum install -y zlib zlib-dev openssl-devel sqlite-devel bzip2-devel libffi libffi-devel gcc gcc-c++
+
+3）编译和安装及配置Python3
+[root@zzzz Python-3.7.2]# vi Modules/Setup.dist
+将以下内容解除注释
+# Socket module helper for socket(2)
+_socket socketmodule.c
+
+# Socket module helper for SSL support; you must comment out the other
+# socket line above, and possibly edit the SSL variable:
+SSL=/usr/local/ssl
+_ssl _ssl.c \
+-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
+-L$(SSL)/lib -lssl -lcrypto
+[root@zzzz Python-3.7.2]# ./configure --prefix=/usr/local/python3.7
+[root@zzzz Python-3.7.2]# make && make install
+[root@zzzz Python-3.7.2]# make clean
+[root@zzzz Python-3.7.2]# ln -s /usr/local/python3.7/bin/python3.7 /usr/bin/python3
+
+4）确认Python3安装成功，且OpenSSL安装成功
+[root@zzzz Python-3.7.2]# python3
+Python 3.7.2 (default, Jan 27 2021, 14:55:17) 
+[GCC 4.8.5 20150623 (Red Hat 4.8.5-44)] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import ssl
+>>> exit()
+
+三、安装执行器
+1）解压并切换用户
+[root@zzzz dir]# unzip executor-python.zip
+[root@zzzz dir]# chown -R testuser:testuser executor-python
+[root@zzzz dir]# cd executor-python/
+[root@zzzz dir]# su testuser
+
+2）清理不必要文件，并备份指定文件
+[testuser@zzzz executor-python]# rm -rf venv2
+[testuser@zzzz executor-python]# 
+[testuser@zzzz executor-python]# cd venv/lib/python3.7/
+[testuser@zzzz python3.7]# zip -r site-packages.zip site-packages/*
+[testuser@zzzz python3.7]# mv site-packages.zip /dir/executor-python/
+[testuser@zzzz executor-python]# rm -rf venv
+
+3）修改配置文件
+[testuser@zzzz executor-python]# cd conf
+修改host_info.in
+[linux]
+host=x.x.x.x
+port=22
+user_name=testuser
+pass_word=xxxxxxxxxxxxxxxx
+timeout=5
+
+修改ip_list.txt
+127.0.0.1
+
+修改setting.py
+class ProductConfig(object):
+    DEBUG = False,
+    PORT = 8030
+    HOST = "x.x.x.x"
+
+[testuser@zzzz executor-python]# cd /dir/executor-python
+修改app.py
+config = setting.BaseConfig.create_config(BaseConfig.PRODUCT)
+
+4）初始化虚拟环境
+[testuser@zzzz executor-python]# python3 -m venv --without-pip venv
+
+将前文中备份的site-packages还原到指定目录
+[testuser@zzzz executor-python]# cd venv/lib/python3.7/
+[testuser@zzzz python3.7]# rm -rf site-packages/
+[testuser@zzzz python3.7]# cp ../../../site-packages.zip .
+[testuser@zzzz python3.7]# unzip site-packages.zip 
+[testuser@zzzz python3.7]# rm -rf site-packages.zip
+
+5）启动执行器服务
+[testuser@zzzz executor-python]# source venv/bin/activate
+(venv) [testuser@zzzz executor-python]# nohup python3 app.py > app.log &
+[1] 93697
+nohup: ignoring input and redirecting stderr to stdout
+(venv) [testuser@zzzz executor-python]# tail -f app.log
+ * Serving Flask app "app" (lazy loading)
+ * Environment: production
+   WARNING: This is a development server. Do not use it in a production deployment.
+   Use a production WSGI server instead.
+ * Debug mode: on
+2021-01-27 15:16:09 PM - werkzeug - INFO[line :113]-_internal:   * Running on http://x.x.x.x:8030/ (Press CTRL+C to quit)
+2021-01-27 15:16:09 PM - werkzeug - INFO[line :113]-_internal:   * Restarting with stat
+2021-01-27 15:16:11 PM - werkzeug - WARNING[line :113]-_internal:   * Debugger is active!
+2021-01-27 15:16:11 PM - werkzeug - INFO[line :113]-_internal:   * Debugger PIN: 293-330-830
+
+四、测试结果
+在同网段另一台机器上进行如下测试
+[testuser@xxxxxx executor-python]$ curl -X POST http://x.x.x.x:8080/api/xxxxx/ping
+
+{"code": 200, "msg": "pong", "data": null}
+出现如上结果，代表执行器安装成功。
