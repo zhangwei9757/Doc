@@ -34,6 +34,32 @@ git config --global https.proxy https://10.28.124.2:31151
 netstat -aon|findstr "8080"
 taskkill /pid 4136-t -f
 
+rpm -ivh xxxx.rpm
+service jenkins start
+
+# 启动配置项
+vi /etc/init.d/jenkins
+vi /etc/sysconfig/jenkins 
+
+sudo chown -R xxx /var/log/jenkins
+sudo chgrp -R xxx /var/log/jenkins
+sudo chown -R xxx /var/lib/jenkins 
+sudo chgrp -R xxx /var/lib/jenkins
+sudo chown -R xxx /var/cache/jenkins
+sudo chgrp -R xxx /var/cache/jenkins
+
+
+禁止所有的ip访问8080端口
+iptables -I INPUT -p tcp --dport 8080 -j DROP
+禁止本机访问8080端口
+iptables -I INPUT -s 127.0.0.1 -p tcp --dport 8080 -j ACCEPT
+允许指定IP访问
+iptables -I INPUT -s 127.0.0.1 -p tcp --dport 8080 -j ACCEPT
+查询规则
+iptables --line -nvL INPUT
+删除规则
+iptables -D INPUT 1
+
 //获取指定名称参数的值
 function GetUrlParam(paraName) {
     var url = document.location.toString();
